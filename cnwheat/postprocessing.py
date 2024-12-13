@@ -84,7 +84,7 @@ HIDDENZONE_T_INDEXES = cnwheat_simulation.Simulation.HIDDENZONE_T_INDEXES
 #: hidden zones post-processing variables
 HIDDENZONE_POSTPROCESSING_VARIABLES = ['Conc_Amino_Acids', 'Conc_Fructan', 'Conc_Proteins', 'Conc_Sucrose', 'RER', 'nb_replications', 'Cont_Fructan_DM', 'Cont_Proteins_DM', 'sum_dry_mass',
                                        'N_content', 'Cont_WSC_DM']
-HIDDENZONE_RUN_VARIABLES_ADDITIONAL = ['leaf_L', 'delta_leaf_L', 'internode_L', 'leaf_pseudostem_length', 'leaf_is_emerged', 'Respi_growth', 'sucrose_consumption_mstruct', 'AA_consumption_mstruct']
+HIDDENZONE_RUN_VARIABLES_ADDITIONAL = ['ratio_DZ','leaf_L', 'delta_leaf_L', 'internode_L', 'leaf_pseudostem_length', 'leaf_is_emerged', 'Respi_growth', 'sucrose_consumption_mstruct', 'AA_consumption_mstruct', 'lamina_Lmax', 'leaf_Wmax', 'SL_ratio']
 #: concatenation of :attr:`HIDDENZONE_T_INDEXES`, :attr:`HIDDENZONE_RUN_VARIABLES <cnwheat.simulation.Simulation.HIDDENZONE_RUN_VARIABLES>` and :attr:`HIDDENZONE_POSTPROCESSING_VARIABLES`
 HIDDENZONE_RUN_POSTPROCESSING_VARIABLES = set(HIDDENZONE_T_INDEXES + cnwheat_simulation.Simulation.HIDDENZONE_RUN_VARIABLES + HIDDENZONE_RUN_VARIABLES_ADDITIONAL + HIDDENZONE_POSTPROCESSING_VARIABLES)
 
@@ -96,7 +96,7 @@ ELEMENTS_T_INDEXES = cnwheat_simulation.Simulation.ELEMENTS_T_INDEXES
 ELEMENTS_POSTPROCESSING_VARIABLES = ['Conc_Amino_Acids', 'Conc_Fructan', 'Conc_Nitrates', 'Conc_Proteins', 'Conc_Starch', 'Conc_Sucrose', 'Conc_TriosesP', 'Cont_Fructan_DM',
                                      'Conc_cytokinins', 'Surfacic_NS', 'NS', 'N_content', 'N_content_total_DM', 'N_tot', 'nb_replications', 'SLA', 'SLN',
                                      'SLN_nonstruct', 'sum_dry_mass', 'Photosynthetic_efficiency', 'Cont_WSC_DM']
-ELEMENTS_RUN_VARIABLES_ADDITIONAL = ['length', 'PARa']
+ELEMENTS_RUN_VARIABLES_ADDITIONAL = ['length', 'PARa', 'Wmax']
 #: concatenation of :attr:`ELEMENTS_T_INDEXES`, :attr:`ELEMENTS_RUN_VARIABLES <cnwheat.simulation.Simulation.ELEMENTS_RUN_VARIABLES>` and :attr:`ELEMENTS_POSTPROCESSING_VARIABLES`
 ELEMENTS_RUN_POSTPROCESSING_VARIABLES = set(ELEMENTS_T_INDEXES + cnwheat_simulation.Simulation.ELEMENTS_RUN_VARIABLES + ELEMENTS_RUN_VARIABLES_ADDITIONAL + ELEMENTS_POSTPROCESSING_VARIABLES)
 
@@ -1251,6 +1251,7 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
     # 1) Photosynthetic organs
     if elements_df is not None:
         elements_df = elements_df.loc[elements_df['mstruct'] != 0]
+        # elements_df = elements_df.loc[(elements_df['organ'] != 'blade') & (elements_df['element'] != 'HiddenElement')]
         graph_variables_ph_elements = {'Ag': u'Gross photosynthesis (µmol m$^{-2}$ s$^{-1}$)', 'Tr': u'Organ surfacic transpiration rate (mmol H$_{2}$0 m$^{-2}$ s$^{-1}$)',
                                        'Transpiration': u'Organ transpiration rate (mmol H$_{2}$0 s$^{-1}$)', 'Ts': u'Temperature surface (°C)', 'Conc_TriosesP': u'[TriosesP] (µmol g$^{-1}$ mstruct)',
                                        'Conc_Starch': u'[Starch] (µmol g$^{-1}$ mstruct)', 'Conc_Sucrose': u'[Sucrose] (µmol g$^{-1}$ mstruct)', 'Conc_Fructan': u'[Fructan] (µmol g$^{-1}$ mstruct)',
@@ -1269,7 +1270,8 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
                                        'SLA': u'Specific Leaf Area (m$^{2}$.kg$^{-1}$)',
                                        'SLN': u'Surfacic Leaf Nitrogen (g.m$^{-2}$)',
                                        'SLN_nonstruct': u'Surfacic Leaf Non-structural Nitrogen (g.m$^{-2}$)', 'length': u'Length (m)',
-                                       'Photosynthetic_efficiency': u'Photosynthetic yield (µmol C/µmol PARa)'}
+                                       'Photosynthetic_efficiency': u'Photosynthetic yield (µmol C/µmol PARa)',
+                                       'Wmax': u'maximal width (m)'}
 
         for org_ph in (['blade'], ['sheath'], ['internode'], ['peduncle', 'ear']):
             for variable_name, variable_label in graph_variables_ph_elements.items():
@@ -1311,7 +1313,7 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
                                                   x_label=x_label,
                                                   y_label=variable_label,
                                                   colors=['blue'],
-                                                  filters={'organ': org},
+                                                  filters={'organ': org, 'axis': 'MS'},
                                                   plot_filepath=os.path.join(graphs_dirpath, graph_name),
                                                   explicit_label=False)
 
@@ -1334,7 +1336,7 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
                                        'Cont_Proteins_DM': u'Protein content (% DM)', 'Cont_WSC_DM': u'WSC content (% DM)', 'Unloading_Sucrose': u'Rate of Sucrose unloading (µmol C h${-1}$)',
                                        'Unloading_Amino_Acids': u'Rate of Amino_acids unloading (µmol N h${-1}$)', 'mstruct': u'Structural mass (g)', 'Nstruct': u'Structural N mass (g)',
                                        'leaf_L': u'Leaf length in hz (m)', 'delta_leaf_L': u'delta of leaf length (m)', 'internode_L': u'Internode length in hz (m)',
-                                       'leaf_pseudostem_length': u'leaf pseudostem length (m)'}
+                                       'leaf_pseudostem_length': u'leaf pseudostem length (m)', 'leaf_Wmax': u'maximal leaf width (m)', 'ratio_DZ': u'ratio of DZ'}
 
         for variable_name, variable_label in graph_variables_hiddenzones.items():
             graph_name = variable_name + '_hz' + '.PNG'

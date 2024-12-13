@@ -105,7 +105,12 @@ class Plant(object):
         Q10 = 1.3
         Tref = 20.
 
-        return Q10 ** ((Tair - Tref) / 10.)
+        return (Q10 ** ((Tair - Tref) / 10.))
+
+        # if Tair < 5:
+        #     return (Q10 ** ((Tair - Tref) / 10.)) / 5
+        # else:
+        #     return Q10 ** ((Tair - Tref) / 10.)
 
     @staticmethod
     def calculate_temperature_effect_on_Vmax(Tair):
@@ -392,6 +397,10 @@ class HiddenZone(Organ):
         :return: Rate of Protein synthesis (µmol` N g-1 mstruct h-1)
         :rtype: float
         """
+
+        # ratio_DZ = 1
+        # vmax = HiddenZone.PARAMETERS.VMAX_SPROTEINS_EMZ * (1 - ratio_DZ) + HiddenZone.PARAMETERS.VMAX_SPROTEINS_DZ * ratio_DZ  #: 'Mean' Vmax for the whole hidden zone
+
         vmax = HiddenZone.PARAMETERS.VMAX_SPROTEINS_EMZ * (1 - self.ratio_DZ) + HiddenZone.PARAMETERS.VMAX_SPROTEINS_DZ * self.ratio_DZ  #: 'Mean' Vmax for the whole hidden zone
         return ((vmax * max(0, (amino_acids / self.mstruct))) / (HiddenZone.PARAMETERS.K_SPROTEINS + max(0, (amino_acids / self.mstruct)))) * parameters.SECOND_TO_HOUR_RATE_CONVERSION * T_effect_Vmax
 
@@ -1627,6 +1636,7 @@ class PhotosyntheticOrganElement(object):
         :rtype: float
         """
         return max(0, self.__class__.PARAMETERS.DELTA_D_CYTOKININS * (cytokinins / (self.mstruct * self.__class__.PARAMETERS.ALPHA))) * parameters.SECOND_TO_HOUR_RATE_CONVERSION * T_effect_Vmax
+        # return 0    # Victoria 10.24
 
     # COMPARTMENTS
 
@@ -1874,4 +1884,5 @@ class Soil(object):
             for root_uptake, plant_id in soil_contributors:
                 Uptake_Nitrates += root_uptake * culm_density[plant_id]  # TODO: temporary, will be removed in next version
             delta_Nitrates = mineralisation - Uptake_Nitrates
+            #delta_Nitrates = mineralisation #N non limitating at elevated CO2
         return delta_Nitrates
