@@ -397,10 +397,6 @@ class HiddenZone(Organ):
         :return: Rate of Protein synthesis (µmol` N g-1 mstruct h-1)
         :rtype: float
         """
-
-        # ratio_DZ = 1
-        # vmax = HiddenZone.PARAMETERS.VMAX_SPROTEINS_EMZ * (1 - ratio_DZ) + HiddenZone.PARAMETERS.VMAX_SPROTEINS_DZ * ratio_DZ  #: 'Mean' Vmax for the whole hidden zone
-
         vmax = HiddenZone.PARAMETERS.VMAX_SPROTEINS_EMZ * (1 - self.ratio_DZ) + HiddenZone.PARAMETERS.VMAX_SPROTEINS_DZ * self.ratio_DZ  #: 'Mean' Vmax for the whole hidden zone
         return ((vmax * max(0, (amino_acids / self.mstruct))) / (HiddenZone.PARAMETERS.K_SPROTEINS + max(0, (amino_acids / self.mstruct)))) * parameters.SECOND_TO_HOUR_RATE_CONVERSION * T_effect_Vmax
 
@@ -866,7 +862,7 @@ class Roots(Organ):
 
     # FLUXES
 
-    def calculate_Unloading_Sucrose(self, sucrose_roots, sucrose_phloem, mstruct_axis, T_effect_conductivity):
+    def calculate_Unloading_Sucrose(self, sucrose_roots, sucrose_phloem, mstruct_axis, T_effect_conductivity, mstruct_roots):
         """Rate of sucrose Unloading from phloem to roots (µmol` C sucrose unloaded g-1 mstruct h-1).
 
 
@@ -878,6 +874,7 @@ class Roots(Organ):
         :return: Rate of Sucrose Unloading (µmol` C g-1 mstruct h-1)
         :rtype: float
         """
+
         conc_sucrose_roots = sucrose_roots / (self.mstruct * self.__class__.PARAMETERS.ALPHA)
         conc_sucrose_phloem = sucrose_phloem / (mstruct_axis * parameters.AXIS_PARAMETERS.ALPHA)
         #: Driving compartment (µmol` C g-1 mstruct)
@@ -887,7 +884,18 @@ class Roots(Organ):
         #: Conductance depending on mstruct (g2 µmol`-1 s-1)
         conductance = Roots.PARAMETERS.SIGMA_SUCROSE * Roots.PARAMETERS.BETA * self.mstruct ** (2 / 3) * T_effect_conductivity
 
-        return driving_sucrose_compartment * diff_sucrose * conductance * parameters.SECOND_TO_HOUR_RATE_CONVERSION
+        Unloading_Sucrose = driving_sucrose_compartment * diff_sucrose * conductance * parameters.SECOND_TO_HOUR_RATE_CONVERSION
+
+        #: water control - Victoria
+        ratio_DM_mstruct = 0.84
+        cont_WSC = ((sucrose_roots * 1E-6 * EcophysiologicalConstants.C_MOLAR_MASS) / EcophysiologicalConstants.HEXOSE_MOLAR_MASS_C_RATIO) / mstruct_roots * 100 * ratio_DM_mstruct
+        if cont_WSC < 10:
+            regul_W = 1
+        else:
+            regul_W = 0
+        regul_W = 1
+
+        return Unloading_Sucrose * regul_W, cont_WSC
 
     @staticmethod
     def calculate_Unloading_Amino_Acids(Unloading_Sucrose, sucrose_phloem, amino_acids_phloem):
@@ -907,7 +915,7 @@ class Roots(Organ):
             Unloading_Amino_Acids = Unloading_Sucrose * (amino_acids_phloem / sucrose_phloem)
         return Unloading_Amino_Acids
 
-    def calculate_Uptake_Nitrates(self, Conc_Nitrates_Soil, nitrates_roots, sucrose_roots, T_effect_Vmax):
+    def calculate_Uptake_Nitrates(self, Conc_Nitrates_Soil, nitrates_roots, sucrose_roots, T_effect_Vmax, SRWC):
         """Rate of nitrate uptake by roots
             - Nitrate uptake is calculated as the sum of the 2 transport systems: HATS and LATS
             - HATS and LATS parameters are calculated as a function of root nitrate concentration (negative regulation)
@@ -917,7 +925,7 @@ class Roots(Organ):
         :param float nitrates_roots: Amount of nitrates in roots (µmol` N)
         :param float sucrose_roots: Amount of sucrose in roots (µmol` C)
         :param float T_effect_Vmax: Correction to apply to enzyme activity
-
+        :param float SRWC: Soil Relative Water Content (%)
 
         :return: Nitrate uptake (µmol` N nitrates) and nitrate influxes HATS and LATS (µmol` N h-1)
         :rtype: (float, float)
@@ -925,10 +933,8 @@ class Roots(Organ):
         conc_nitrates_roots = nitrates_roots / self.mstruct
 
         #: High Affinity Transport System (HATS)
-        VMAX_HATS_MAX = max(0.,
-                            Roots.PARAMETERS.A_VMAX_HATS * conc_nitrates_roots + Roots.PARAMETERS.B_VMAX_HATS)  #: Maximal rate of nitrates influx at saturating soil N concentration;HATS (µ  mol` N nitrates g-1 mstruct s-1)
-        K_HATS = max(0.,
-                     Roots.PARAMETERS.A_K_HATS * conc_nitrates_roots + Roots.PARAMETERS.B_K_HATS)  #: Affinity coefficient of nitrates influx at saturating soil N concentration;HATS (µmol` m-3)
+        VMAX_HATS_MAX = max(0., Roots.PARAMETERS.A_VMAX_HATS * conc_nitrates_roots + Roots.PARAMETERS.B_VMAX_HATS)  #: Maximal rate of nitrates influx at saturating soil N concentration;HATS (µ  mol` N nitrates g-1 mstruct s-1)
+        K_HATS = max(0., Roots.PARAMETERS.A_K_HATS * conc_nitrates_roots + Roots.PARAMETERS.B_K_HATS)  #: Affinity coefficient of nitrates influx at saturating soil N concentration;HATS (µmol` m-3)
         HATS = (VMAX_HATS_MAX * Conc_Nitrates_Soil) / (K_HATS + Conc_Nitrates_Soil)  #: Rate of nitrate influx by HATS (µmol` N nitrates uptaked s-1 g-1 mstruct)
 
         #: Low Affinity Transport System (LATS)
@@ -941,10 +947,12 @@ class Roots(Organ):
 
         # Regulations
         regul_C = (sucrose_roots / self.mstruct) * Roots.PARAMETERS.RELATIVE_VMAX_N_UPTAKE / ((sucrose_roots / self.mstruct) + Roots.PARAMETERS.K_C)  #: Nitrate uptake regulation by root C
+        regul_W = min(1, 1 / (0.9 + (SRWC / 45) ** -3.5))  #: Nitrate uptake regulation by soil relative water content
+
         if HATS_LATS < Roots.PARAMETERS.MIN_INFLUX_FOR_UPTAKE:
             net_nitrate_uptake = 0
         else:
-            net_nitrate_uptake = nitrate_influx * Roots.PARAMETERS.NET_INFLUX_UPTAKE_RATIO * regul_C  #: Net nitrate uptake (µmol` N nitrates uptaked by roots)
+            net_nitrate_uptake = nitrate_influx * Roots.PARAMETERS.NET_INFLUX_UPTAKE_RATIO * regul_C * regul_W  #: Net nitrate uptake (µmol` N nitrates uptaked by roots)
         return net_nitrate_uptake, nitrate_influx
 
     def calculate_S_amino_acids(self, nitrates, sucrose, T_effect_Vmax):
@@ -1636,7 +1644,6 @@ class PhotosyntheticOrganElement(object):
         :rtype: float
         """
         return max(0, self.__class__.PARAMETERS.DELTA_D_CYTOKININS * (cytokinins / (self.mstruct * self.__class__.PARAMETERS.ALPHA))) * parameters.SECOND_TO_HOUR_RATE_CONVERSION * T_effect_Vmax
-        # return 0    # Victoria 10.24
 
     # COMPARTMENTS
 
@@ -1788,12 +1795,12 @@ class Soil(object):
 
     PARAMETERS = parameters.SOIL_PARAMETERS  #: the internal parameters of the soil
 
-    def __init__(self, volume=None, nitrates=None, Tsoil=None):
-
+    def __init__(self, volume=None, nitrates=None, Tsoil=None, SRWC=None):
         # state parameters
         self.volume = volume  #: volume of soil explored by roots (m3)
         self.Tsoil = Tsoil  #: soil temperature (°C)
         self.constant_Conc_Nitrates = False  #: If True, the model run with a constant soil nitrate concentration (bool)
+        self.SRWC = SRWC  #: soil relative water content (%)
 
         # state variables
         self.nitrates = nitrates  #: µmol` N nitrates
@@ -1884,5 +1891,4 @@ class Soil(object):
             for root_uptake, plant_id in soil_contributors:
                 Uptake_Nitrates += root_uptake * culm_density[plant_id]  # TODO: temporary, will be removed in next version
             delta_Nitrates = mineralisation - Uptake_Nitrates
-            #delta_Nitrates = mineralisation #N non limitating at elevated CO2
         return delta_Nitrates

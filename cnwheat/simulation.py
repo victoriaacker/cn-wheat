@@ -296,7 +296,7 @@ class Simulation(object):
     #: concatenation of :attr:`T_INDEX` and :attr:`SOILS_INDEXES`
     SOILS_T_INDEXES = T_INDEX + SOILS_INDEXES
     #: the parameters which define the state of the modeled system at soil scale
-    SOILS_STATE_PARAMETERS = ['Tsoil', 'volume']
+    SOILS_STATE_PARAMETERS = ['Tsoil', 'volume', 'SRWC']
     #: the variables which define the state of the modeled system at soil scale,
     #: formed be the concatenation of :attr:`SOILS_STATE_PARAMETERS` and the names
     #: of the compartments associated to each soil (see :attr:`MODEL_COMPARTMENTS_NAMES`)
@@ -906,7 +906,7 @@ class Simulation(object):
 
                 # compute the flows from/to the roots to/from photosynthetic organs
                 axis.roots.Uptake_Nitrates, axis.roots.HATS_LATS = axis.roots.calculate_Uptake_Nitrates(soil.Conc_Nitrates_Soil, axis.roots.nitrates, axis.roots.sucrose,
-                                                                                                        soil.T_effect_Vmax)
+                                                                                                        soil.T_effect_Vmax, soil.SRWC)
                 soil_contributors.append((axis.roots.Uptake_Nitrates, plant.index))  #: TODO TEMP!!!
                 axis.roots.R_Nnit_upt = self.respiration_model.RespirationModel.R_Nnit_upt(axis.roots.Uptake_Nitrates, axis.roots.sucrose)
                 axis.roots.Export_Nitrates = axis.roots.calculate_Export_Nitrates(axis.roots.nitrates, axis.roots.regul_transpiration)
@@ -1073,7 +1073,7 @@ class Simulation(object):
 
                 # compute the derivative of each compartment of roots
                 # flows
-                axis.roots.Unloading_Sucrose = axis.roots.calculate_Unloading_Sucrose(axis.roots.sucrose, axis.phloem.sucrose, axis.mstruct, plant.T_effect_conductivity)
+                axis.roots.Unloading_Sucrose, axis.roots.Cont_WSC = axis.roots.calculate_Unloading_Sucrose(axis.roots.sucrose, axis.phloem.sucrose, axis.mstruct, plant.T_effect_conductivity, axis.roots.mstruct)
                 axis.roots.Unloading_Amino_Acids = axis.roots.calculate_Unloading_Amino_Acids(axis.roots.Unloading_Sucrose, axis.phloem.sucrose, axis.phloem.amino_acids)
                 axis.roots.S_Amino_Acids = axis.roots.calculate_S_amino_acids(axis.roots.nitrates, axis.roots.sucrose, soil.T_effect_Vmax)
                 axis.roots.R_Nnit_red, axis.roots.S_Amino_Acids = self.respiration_model.RespirationModel.R_Nnit_red(axis.roots.S_Amino_Acids, axis.roots.sucrose,

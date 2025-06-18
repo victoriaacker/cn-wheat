@@ -96,7 +96,7 @@ ELEMENTS_T_INDEXES = cnwheat_simulation.Simulation.ELEMENTS_T_INDEXES
 ELEMENTS_POSTPROCESSING_VARIABLES = ['Conc_Amino_Acids', 'Conc_Fructan', 'Conc_Nitrates', 'Conc_Proteins', 'Conc_Starch', 'Conc_Sucrose', 'Conc_TriosesP', 'Cont_Fructan_DM',
                                      'Conc_cytokinins', 'Surfacic_NS', 'NS', 'N_content', 'N_content_total_DM', 'N_tot', 'nb_replications', 'SLA', 'SLN',
                                      'SLN_nonstruct', 'sum_dry_mass', 'Photosynthetic_efficiency', 'Cont_WSC_DM']
-ELEMENTS_RUN_VARIABLES_ADDITIONAL = ['length', 'PARa', 'Wmax']
+ELEMENTS_RUN_VARIABLES_ADDITIONAL = ['length', 'PARa', 'Wmax', 'CO2']
 #: concatenation of :attr:`ELEMENTS_T_INDEXES`, :attr:`ELEMENTS_RUN_VARIABLES <cnwheat.simulation.Simulation.ELEMENTS_RUN_VARIABLES>` and :attr:`ELEMENTS_POSTPROCESSING_VARIABLES`
 ELEMENTS_RUN_POSTPROCESSING_VARIABLES = set(ELEMENTS_T_INDEXES + cnwheat_simulation.Simulation.ELEMENTS_RUN_VARIABLES + ELEMENTS_RUN_VARIABLES_ADDITIONAL + ELEMENTS_POSTPROCESSING_VARIABLES)
 
@@ -1271,7 +1271,7 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
                                        'SLN': u'Surfacic Leaf Nitrogen (g.m$^{-2}$)',
                                        'SLN_nonstruct': u'Surfacic Leaf Non-structural Nitrogen (g.m$^{-2}$)', 'length': u'Length (m)',
                                        'Photosynthetic_efficiency': u'Photosynthetic yield (µmol C/µmol PARa)',
-                                       'Wmax': u'maximal width (m)'}
+                                       'Wmax': u'maximal width (m)', 'CO2': u'Atmospheric CO2 concentration (ppm)'}
 
         for org_ph in (['blade'], ['sheath'], ['internode'], ['peduncle', 'ear']):
             for variable_name, variable_label in graph_variables_ph_elements.items():
@@ -1336,7 +1336,7 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
                                        'Cont_Proteins_DM': u'Protein content (% DM)', 'Cont_WSC_DM': u'WSC content (% DM)', 'Unloading_Sucrose': u'Rate of Sucrose unloading (µmol C h${-1}$)',
                                        'Unloading_Amino_Acids': u'Rate of Amino_acids unloading (µmol N h${-1}$)', 'mstruct': u'Structural mass (g)', 'Nstruct': u'Structural N mass (g)',
                                        'leaf_L': u'Leaf length in hz (m)', 'delta_leaf_L': u'delta of leaf length (m)', 'internode_L': u'Internode length in hz (m)',
-                                       'leaf_pseudostem_length': u'leaf pseudostem length (m)', 'leaf_Wmax': u'maximal leaf width (m)', 'ratio_DZ': u'ratio of DZ'}
+                                       'leaf_pseudostem_length': u'leaf pseudostem length (m)', 'ratio_DZ': u'ratio of DZ'}
 
         for variable_name, variable_label in graph_variables_hiddenzones.items():
             graph_name = variable_name + '_hz' + '.PNG'
