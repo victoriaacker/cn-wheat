@@ -236,6 +236,11 @@ class RootsParameters(object):
         self.K_C = 7000                      #: Affinity coefficient for the regulation function by root C (:math:`\mu` mol C sucrose g-1 MS)
         self.RELATIVE_VMAX_N_UPTAKE = 1
 
+        # Regulation function by SRWC of nitrate uptake
+        self.SRWC_crit = 45                 #: Critical soil relative water content threshold at which nitrate uptake is reduced by 50% (%)
+        self.n = -3.5                       #: Shape parameter (-)
+        self.m = 0.9                        #: Shape parameter (-)
+
         # Nitrate uptake
         self.NET_INFLUX_UPTAKE_RATIO = 0.6   #: ratio (net uptake : nitrate influx)
         self.MIN_INFLUX_FOR_UPTAKE = 3.02E-03  #: Minimum influx rate below wich no net absorption happens (:math:`\mu` mol C sucrose g-1 mstruct s-1)

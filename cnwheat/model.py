@@ -107,10 +107,6 @@ class Plant(object):
 
         return (Q10 ** ((Tair - Tref) / 10.))
 
-        # if Tair < 5:
-        #     return (Q10 ** ((Tair - Tref) / 10.)) / 5
-        # else:
-        #     return Q10 ** ((Tair - Tref) / 10.)
 
     @staticmethod
     def calculate_temperature_effect_on_Vmax(Tair):
@@ -886,16 +882,7 @@ class Roots(Organ):
 
         Unloading_Sucrose = driving_sucrose_compartment * diff_sucrose * conductance * parameters.SECOND_TO_HOUR_RATE_CONVERSION
 
-        #: water control - Victoria
-        ratio_DM_mstruct = 0.84
-        cont_WSC = ((sucrose_roots * 1E-6 * EcophysiologicalConstants.C_MOLAR_MASS) / EcophysiologicalConstants.HEXOSE_MOLAR_MASS_C_RATIO) / mstruct_roots * 100 * ratio_DM_mstruct
-        if cont_WSC < 10:
-            regul_W = 1
-        else:
-            regul_W = 0
-        regul_W = 1
-
-        return Unloading_Sucrose * regul_W, cont_WSC
+        return Unloading_Sucrose
 
     @staticmethod
     def calculate_Unloading_Amino_Acids(Unloading_Sucrose, sucrose_phloem, amino_acids_phloem):
@@ -947,7 +934,7 @@ class Roots(Organ):
 
         # Regulations
         regul_C = (sucrose_roots / self.mstruct) * Roots.PARAMETERS.RELATIVE_VMAX_N_UPTAKE / ((sucrose_roots / self.mstruct) + Roots.PARAMETERS.K_C)  #: Nitrate uptake regulation by root C
-        regul_W = min(1, 1 / (0.9 + (SRWC / 45) ** -3.5))  #: Nitrate uptake regulation by soil relative water content
+        regul_W = min(1, 1 / (Roots.PARAMETERS.m + (Roots.PARAMETERS.SRWC_crit / 45) ** Roots.PARAMETERS.n))  #: Nitrate uptake regulation by soil relative water content
 
         if HATS_LATS < Roots.PARAMETERS.MIN_INFLUX_FOR_UPTAKE:
             net_nitrate_uptake = 0

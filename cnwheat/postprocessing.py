@@ -1251,7 +1251,6 @@ def generate_graphs(axes_df=None, hiddenzones_df=None, organs_df=None, elements_
     # 1) Photosynthetic organs
     if elements_df is not None:
         elements_df = elements_df.loc[elements_df['mstruct'] != 0]
-        # elements_df = elements_df.loc[(elements_df['organ'] != 'blade') & (elements_df['element'] != 'HiddenElement')]
         graph_variables_ph_elements = {'Ag': u'Gross photosynthesis (µmol m$^{-2}$ s$^{-1}$)', 'Tr': u'Organ surfacic transpiration rate (mmol H$_{2}$0 m$^{-2}$ s$^{-1}$)',
                                        'Transpiration': u'Organ transpiration rate (mmol H$_{2}$0 s$^{-1}$)', 'Ts': u'Temperature surface (°C)', 'Conc_TriosesP': u'[TriosesP] (µmol g$^{-1}$ mstruct)',
                                        'Conc_Starch': u'[Starch] (µmol g$^{-1}$ mstruct)', 'Conc_Sucrose': u'[Sucrose] (µmol g$^{-1}$ mstruct)', 'Conc_Fructan': u'[Fructan] (µmol g$^{-1}$ mstruct)',
