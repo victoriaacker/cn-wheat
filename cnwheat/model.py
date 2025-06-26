@@ -934,7 +934,7 @@ class Roots(Organ):
 
         # Regulations
         regul_C = (sucrose_roots / self.mstruct) * Roots.PARAMETERS.RELATIVE_VMAX_N_UPTAKE / ((sucrose_roots / self.mstruct) + Roots.PARAMETERS.K_C)  #: Nitrate uptake regulation by root C
-        regul_W = min(1, 1 / (Roots.PARAMETERS.m + (Roots.PARAMETERS.SRWC_crit / 45) ** Roots.PARAMETERS.n))  #: Nitrate uptake regulation by soil relative water content
+        regul_W = min(1, 1 / (Roots.PARAMETERS.m + (SRWC / Roots.PARAMETERS.SRWC_crit) ** Roots.PARAMETERS.n))  #: Nitrate uptake regulation by soil relative water content
 
         if HATS_LATS < Roots.PARAMETERS.MIN_INFLUX_FOR_UPTAKE:
             net_nitrate_uptake = 0
